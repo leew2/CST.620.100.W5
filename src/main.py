@@ -1,9 +1,10 @@
 from img_caption import gen_img_cap
+from attention_caption import get_attention_caption
 
 def main():
     path = "img/cat.jpg"
-    cap = gen_img_cap(path)
-    print("BLIP Caption:", cap)
+    cap = get_attention_caption(path)
+    print("Attention Caption:", cap)
 
 
 

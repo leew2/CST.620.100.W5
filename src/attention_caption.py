@@ -1,8 +1,8 @@
-from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
+from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 
 def get_attention_caption(img):
     model = VisionEncoderDecoderModel.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
-    processors = ViTFeatureExtractor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
+    processors = ViTImageProcessor.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
     tokenizer = AutoTokenizer.from_pretrained("nlpconnect/vit-gpt2-image-captioning")
 
     inputs = processors(images=img, return_tensors="pt")
