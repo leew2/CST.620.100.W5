@@ -13,25 +13,42 @@ def get_style_transfer(img, style):
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
     ])
+    # get image
     content_img = preprocess(content_img).unsqueeze(0).to(device)
     style_img = preprocess(style_img).unsqueeze(0).to(device)
     vgg = model.vgg19(pretrained=True).features.eval().to(device)
-    optimizer = optim.Adam([content_img], lr=0.01)
-
-    tar = vgg(content_img) # checkin g tensor differences
-    print(f'IMG:{content_img.shape}, STYLE:{style_img.shape}, VGG{tar.shape}')
     
+    # get features
+    target_feature = vgg(content_img).detach()
+    target_style = vgg(style_img).detach()
+    
+    gen_img = content_img.clone().requires_grad_(True)
+    optimizer = optim.Adam([gen_img], lr=0.01)
 
-    for step in range(500):
-        target_content = vgg(content_img)
-        target_style = vgg(style_img)
-        loss = content_loss(target=target_content, content=content_img) + 1e6 * style_loss(target=target_style, style=style_img)
+    print(f'IMG:{content_img.shape}, STYLE:{style_img.shape}, target{target_feature.shape}')
+    amount = 4000
+    for step in range(amount):
+        pred_img = vgg(gen_img)
+        loss = content_loss(target=target_feature, content=pred_img) + 1e6 * style_loss(target=target_style, style=pred_img)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-    
-    plt.imshow(img.squeeze().permute(1, 2, 0).detach().numpy())
+        if step % 50 == 0:
+            percent = (step / amount) * 100
+            print(f'Step [{step}/{amount}] ({percent:.2f}%), Loss: {loss.item():.4f}')
+    new_img = gen_img.cpu().clone().squeeze(0)
+    plt.subplot(1,3,1)
+    plt.imshow(content_img.permute(0, 2, 3, 1).squeeze(0).cpu().numpy())
+    plt.title("Base")
+    plt.axis('off')
+    plt.subplot(1,3,2)
+    plt.imshow(style_img.permute(0, 2, 3, 1).squeeze(0).cpu().numpy())
+    plt.title("Style")
+    plt.axis('off')
+    plt.subplot(1,3,3)
+    plt.imshow(new_img.permute(1, 2, 0).detach().numpy())
+    plt.title("Generated")
     plt.axis('off')
     plt.show()
 
